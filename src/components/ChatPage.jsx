@@ -5,20 +5,39 @@ const detectLanguage = async (text) => {
   if (!text.trim()) return;
 
   try {
-    const res = await fetch("https://aistudio.google.com/api/detectLanguage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-
-    const data = await res.json();
-    console.log("Detected Language:", data.language); // Example: 'en', 'es'
-    return data.language;
+    // Check if API exists
+    if (typeof chrome !== "undefined" && "detectLanguage" in chrome) {
+      const result = await chrome.detectLanguage(text);
+      console.log("Detected Language:", result.languages); // Array of detected languages
+      return result.languages[0] || "Unknown";
+    } else {
+      console.error("Language Detection API not available.");
+      return "Unknown";
+    }
   } catch (error) {
     console.error("Language Detection Error:", error);
-    return null;
+    return "Unknown";
   }
 };
+
+
+
+const handleSend = async () => {
+  if (!inputText.trim()) return;
+  setLoading(true);
+
+  const detectedLang = await detectLanguage(inputText);
+
+  const newOutput = {
+    text: inputText,
+    language: detectedLang || "Unknown",
+  };
+
+  setOutput([...output, newOutput]);
+  setInputText("");
+  setLoading(false);
+};
+
 
 const ChatPage = () => {
   const [inputText, setInputText] = useState("");
